@@ -57,7 +57,7 @@ public class JobManager {
     public JobManager(int n) {
         if (n < 1) {throw new IllegalArgumentException("n must be at least 1");}
         this.n = n;
-        for (int i = 0; i < n; i++) {
+        for (int i = 1; i <= n; i++) {
             this.unassignedJobs.add(i);
         }
     };
@@ -84,8 +84,10 @@ public class JobManager {
         if (robot == null || robot.isNull()) { return false; }
         if (!this.robotToJobs.containsKey(robot)) {
             this.robotToJobs.put(robot, new TreeSet<>());
+            this.checkRep();
             return true;
         }
+        this.checkRep();
         return false;
     };
 
@@ -97,11 +99,18 @@ public class JobManager {
      * @post All jobs formerly assigned to this robot are now unassigned
      */
     public boolean removeRobot(Robot robot) {
-        if (robot == null || robot.isNull()) { return false; }
+        if (robot == null || robot.isNull()) {  this.checkRep();return false; }
         if (this.robotToJobs.containsKey(robot)) {
+
+            unassignedJobs.addAll(robotToJobs.get(robot));
+
             this.robotToJobs.remove(robot);
+
+
+            this.checkRep();
             return true;
         }
+        this.checkRep();
         return false;
     };
 
@@ -118,15 +127,22 @@ public class JobManager {
      * unassigned job managed by this with id <= jobId that is currently not assigned to robot.
      */
     public boolean assignJobs(Robot robot, int jobId) {
-        if (robot == null || robot.isNull()) { return false; }
-        if (!this.robotToJobs.containsKey(robot)) { return false; }
+        if (robot == null || robot.isNull()) {this.checkRep(); return false; }
+        if (!this.robotToJobs.containsKey(robot)) { this.checkRep(); return false; }
         for (Iterator<Integer> jobIter = this.unassignedJobs.iterator(); jobIter.hasNext();) {
             Integer job = jobIter.next();
             if (job <= jobId) {
+
                 this.robotToJobs.get(robot).add(job);
+
             }
             else { break; }
         }
+
+        for (Integer job: this.robotToJobs.get(robot)){
+            unassignedJobs.remove(job);
+        }
+        this.checkRep();
         return true;
     }
 
@@ -138,8 +154,10 @@ public class JobManager {
      *         job is assigned to a robot in this; and false otherwise
      */
     public boolean isAssigned(int jobId) {
-        if (jobId < 1 || jobId > n) { return false; }
-        return this.unassignedJobs.contains(jobId);
+        if (jobId < 1 || jobId > n) { this.checkRep(); return false; }
+        this.checkRep();
+
+        return !this.unassignedJobs.contains(jobId);
     }
 
     /**
@@ -150,10 +168,11 @@ public class JobManager {
      *         managed by this, and (2) that job is assigned to Robot in this; and a Null Robot otherwise
      */
     public Robot getRobot(int jobId) {
-        if (jobId < 1 || jobId > this.n) { return new Robot(0); }
+        if (jobId < 1 || jobId > this.n) {this.checkRep();  return new Robot(0); }
         for (Robot robot : this.robotToJobs.keySet()) {
-            if (this.robotToJobs.get(robot).contains(jobId)) { return new Robot(robot.id); }
+            if (this.robotToJobs.get(robot).contains(jobId)) { this.checkRep(); return new Robot(robot.id); }
         }
+        this.checkRep();
         return new Robot(0);
     }
 
@@ -172,9 +191,9 @@ public class JobManager {
      * assigned to dstRobot.
      */
     public boolean moveJobs(Robot srcRobot, Robot dstRobot, int jobId) {
-        if (srcRobot == null || dstRobot == null) { return false; }
-        if (srcRobot.isNull() || dstRobot.isNull()) { return false; }
-        if (jobId < 1) { return false; }
+        if (srcRobot == null || dstRobot == null) { this.checkRep();return false; }
+        if (srcRobot.isNull() || dstRobot.isNull()) {this.checkRep(); return false; }
+        if (jobId < 1) { this.checkRep();return false; }
         if (!this.robotToJobs.containsKey(srcRobot) || !this.robotToJobs.containsKey(dstRobot)) { return false; }
         for (Iterator<Integer> jobIter = this.robotToJobs.get(srcRobot).iterator(); jobIter.hasNext();) {
             Integer job = jobIter.next();
@@ -183,6 +202,7 @@ public class JobManager {
             }
             else { break; }
         }
+        this.checkRep();
         return true;
 
     }
@@ -199,10 +219,11 @@ public class JobManager {
      * exists some job managed by this that was formerly assigned to srcRobot and is currently not assigned to dstRobot.
      */
     public boolean moveJobs(Robot srcRobot, Robot dstRobot) {
-        if (srcRobot == null || dstRobot == null) { return false; }
-        if (srcRobot.isNull() || dstRobot.isNull()) { return false; }
-        if (!this.robotToJobs.containsKey(srcRobot) || !this.robotToJobs.containsKey(dstRobot)) { return false; }
+        if (srcRobot == null || dstRobot == null) { this.checkRep();return false; }
+        if (srcRobot.isNull() || dstRobot.isNull()) { this.checkRep();return false; }
+        if (!this.robotToJobs.containsKey(srcRobot) || !this.robotToJobs.containsKey(dstRobot)) { this.checkRep();return false; }
         this.robotToJobs.get(dstRobot).addAll(this.robotToJobs.get(srcRobot));
+        this.checkRep();
         return true;
     }
 
@@ -216,10 +237,11 @@ public class JobManager {
      *         such job or robot exists in this
      */
     public int getHighestPriorityJob(Robot robot, int jobId) {
-        if (robot == null || robot.isNull()) { return 0; }
-        if (jobId < 1) { return 0; }
-        if (!this.robotToJobs.containsKey(robot)) { return 0; }
-        if (this.robotToJobs.get(robot).isEmpty()) { return 0; }
+        if (robot == null || robot.isNull()) { this.checkRep();return 0; }
+        if (jobId < 1) {this.checkRep(); return 0; }
+        if (!this.robotToJobs.containsKey(robot)) { this.checkRep();return 0; }
+        if (this.robotToJobs.get(robot).isEmpty()) { this.checkRep();return 0; }
+        this.checkRep();
         return this.robotToJobs.get(robot).floor(jobId);
     }
 
@@ -232,10 +254,11 @@ public class JobManager {
      */
     @Override
     public boolean equals(Object o) {
-        if (o == null | !(o instanceof JobManager)) { return false; }
+        if (o == null | !(o instanceof JobManager)) { this.checkRep();return false; }
         JobManager other = (JobManager) o;
-        if (this.n != other.n) { return false; }
-        if (!this.unassignedJobs.equals(other.unassignedJobs)) { return false; }
+        if (this.n != other.n) { this.checkRep();return false; }
+        if (!this.unassignedJobs.equals(other.unassignedJobs)) { this.checkRep();return false; }
+        this.checkRep();
         return this.robotToJobs.equals(other.robotToJobs);
     }
 
@@ -255,18 +278,69 @@ public class JobManager {
             if (this.robotToJobs.get(robot).isEmpty()) { continue; }
             long term = robot.id * this.robotToJobs.get(robot).last();
             hash += term;
-            if (hash > Integer.MAX_VALUE) { return Integer.MAX_VALUE; }
+            if (hash > Integer.MAX_VALUE) { this.checkRep(); return Integer.MAX_VALUE; }
         }
+        this.checkRep();
         return (int)hash;
     }
+
+
 
     /**
      * Checks the representation invariant of this
      *
      * @throws AssertionError if the representation invariant is violated
      */
+
+
     public void checkRep() {
-        // TODO implement this method
+
+        //TODO: WORK ON is_assigned method and fix those damn tests
+        int currMax = 0;
+        // rule (2)
+
+
+        currMax = unassignedJobs.size();
+
+
+
+        for (TreeSet<Integer> jobSet: robotToJobs.values()){
+            for(Integer job: jobSet){
+                if (job >= unassignedJobs.size()){
+                    currMax = Math.max(currMax,job);
+                }
+
+            }
+
+        }
+
+        if (currMax != this.n){
+            throw new AssertionError("Rule 2 violated");
+        }
+
+
+
+        // rule (5)
+        for (Integer unassignedJob: unassignedJobs){
+           for (TreeSet<Integer> jobSet: robotToJobs.values()){
+               if (jobSet.contains(unassignedJob)){
+                   throw new AssertionError("rule 5 violated");
+               }
+           }
+        }
+
+        // rule (9)
+        for (TreeSet<Integer> jobSet: robotToJobs.values()){
+            if (!jobSet.isEmpty()){
+                if (!Collections.max(jobSet).equals(jobSet.getLast())){
+                    throw new AssertionError("Rule 9 violated");
+                }
+            }
+
+        }
+
+
+
         // DO NOT USE THE `assert` keyword; You must use `throw new AssertionError()`
     }
 }

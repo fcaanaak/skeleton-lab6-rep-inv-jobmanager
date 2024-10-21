@@ -137,4 +137,5 @@ public class CheckRepTests {
         jm.unassignedJobs.add(0);
         assertThrows(AssertionError.class, () -> {jm.checkRep();});
     }
+
 }
