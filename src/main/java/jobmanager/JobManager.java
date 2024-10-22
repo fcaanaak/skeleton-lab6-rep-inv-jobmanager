@@ -199,8 +199,13 @@ public class JobManager {
             Integer job = jobIter.next();
             if (job <= jobId) {
                 this.robotToJobs.get(dstRobot).add(job);
+
             }
             else { break; }
+        }
+
+        for (Integer job: this.robotToJobs.get(dstRobot)){
+            this.robotToJobs.get(srcRobot).remove(job);
         }
         this.checkRep();
         return true;
@@ -223,6 +228,7 @@ public class JobManager {
         if (srcRobot.isNull() || dstRobot.isNull()) { this.checkRep();return false; }
         if (!this.robotToJobs.containsKey(srcRobot) || !this.robotToJobs.containsKey(dstRobot)) { this.checkRep();return false; }
         this.robotToJobs.get(dstRobot).addAll(this.robotToJobs.get(srcRobot));
+        this.robotToJobs.get(srcRobot).removeAll(this.robotToJobs.get(dstRobot));
         this.checkRep();
         return true;
     }
@@ -296,11 +302,11 @@ public class JobManager {
     public void checkRep() {
 
         //TODO: WORK ON is_assigned method and fix those damn tests
-        int currMax = 0;
+        //int currMax = 0;
         // rule (2)
+        int currMax = this.n;
 
-
-        currMax = unassignedJobs.size();
+        currMax = Math.max(unassignedJobs.size(),currMax);
 
 
 
